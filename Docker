@@ -1,0 +1,27 @@
+FROM python:3.10-slim
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 1️⃣ Install torch first (no NumPy yet)
+RUN pip install --no-cache-dir \
+    torch==2.1.0+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# 2️⃣ Install Whisper + audio dependencies
+RUN pip install --no-cache-dir \
+    openai-whisper \
+    soundfile \
+    imageio-ffmpeg
+
+# 3️⃣ Force NumPy downgrade (critical)
+RUN pip install --no-cache-dir --force-reinstall "numpy<2"
+
+# App
+COPY generate_vtt.py .
+
+ENTRYPOINT ["python", "generate_vtt.py"]
